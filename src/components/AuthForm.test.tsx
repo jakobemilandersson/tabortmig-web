@@ -1,9 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { AuthForm } from './AuthForm'
 
 describe('AuthForm', () => {
+  // Shared no-op used in tests that don't assert on onSubmit calls.
+  // Cleared before each test so call counts don't bleed between tests.
   const noop = vi.fn(() => Promise.resolve())
+  beforeEach(() => noop.mockClear())
 
   it('renders email and password fields with labels', () => {
     render(<AuthForm mode="signIn" onSubmit={noop} />)

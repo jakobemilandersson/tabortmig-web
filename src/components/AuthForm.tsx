@@ -6,6 +6,9 @@ export interface AuthFormProps {
 }
 
 export function AuthForm({ mode, onSubmit, error, loading = false }: AuthFormProps) {
+  // Uncontrolled inputs: values are read from the DOM on submit rather than
+  // held in React state. This keeps the component free of unnecessary
+  // re-renders; RTL's fireEvent.change sets the DOM .value correctly in tests.
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
