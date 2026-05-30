@@ -1,28 +1,22 @@
-name: Deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  build:
-    name: Build
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -33,20 +27,18 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Add SPA 404 fallback
+        run: cp dist/index.html dist/404.html
+
+      # Deploy production build to the root of gh-pages.
+      # CNAME (tabortmig.jakob.now) is in public/ so Vite copies it into
+      # dist/ automatically — no separate CNAME step needed.
+      # clean: true removes stale production assets but preserves
+      # pull/ preview folders.
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: dist
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-
-    steps:
-      - name: Deploy
-        id: deploy
-        uses: actions/deploy-pages@v4
+          branch: gh-pages
+          folder: dist
+          clean: true
+          exclude: pull/**
