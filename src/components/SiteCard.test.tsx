@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { SiteCard } from './SiteCard'
 import type { SiteConfig } from '../data/sites'
 
@@ -39,7 +39,6 @@ describe('SiteCard', () => {
       const dateInput = screen.getByLabelText(/datum för avanmälan från ratsit/i)
       await userEvent.clear(dateInput)
       await userEvent.type(dateInput, '2025-06-15')
-      // Last onChange call should carry the new date string
       const lastCall = onChange.mock.calls.at(-1)?.[0] as Record<string, unknown>
       expect(lastCall.optOutDate).toBe('2025-06-15')
     })
