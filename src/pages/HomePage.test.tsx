@@ -8,30 +8,7 @@ const { mockSaveOptOuts } = vi.hoisted(() => ({
   mockSaveOptOuts: vi.fn().mockResolvedValue(true),
 }))
 
-// ── Block the entire Firebase initialisation chain ─────────────────────────
-vi.mock('firebase/app', () => ({
-  initializeApp: vi.fn(() => ({})),
-  getApps: vi.fn(() => []),
-}))
-
-vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(() => ({})),
-  collection: vi.fn(),
-  getDocs: vi.fn(),
-  doc: vi.fn(),
-  setDoc: vi.fn(),
-  Timestamp: { fromDate: (d: Date) => ({ toDate: () => d }) },
-}))
-
-vi.mock('firebase/auth', () => ({
-  getAuth: vi.fn(() => ({})),
-  onAuthStateChanged: vi.fn(),
-  createUserWithEmailAndPassword: vi.fn(),
-  signInWithEmailAndPassword: vi.fn(),
-  signOut: vi.fn(),
-}))
-
-// ── Mock feature hooks with safe defaults so no test ever gets undefined ─────
+// ── Mock feature hooks with safe defaults ─────────────────────────────────
 vi.mock('../features/auth/useAuth', () => ({
   useAuth: vi.fn(() => ({ currentUser: null, loading: false })),
 }))
