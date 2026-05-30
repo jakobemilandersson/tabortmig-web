@@ -8,7 +8,7 @@ const { mockSaveOptOuts } = vi.hoisted(() => ({
   mockSaveOptOuts: vi.fn().mockResolvedValue(true),
 }))
 
-// ── Block the entire Firebase initialisation chain ───────────────────────────
+// ── Block the entire Firebase initialisation chain ─────────────────────────
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({})),
   getApps: vi.fn(() => []),
@@ -31,9 +31,9 @@ vi.mock('firebase/auth', () => ({
   signOut: vi.fn(),
 }))
 
-// ── Mock feature hooks ────────────────────────────────────────────────────────
+// ── Mock feature hooks with safe defaults so no test ever gets undefined ─────
 vi.mock('../features/auth/useAuth', () => ({
-  useAuth: vi.fn(),
+  useAuth: vi.fn(() => ({ currentUser: null, loading: false })),
 }))
 
 vi.mock('../features/optOuts/useOptOuts', () => ({
@@ -44,7 +44,7 @@ vi.mock('../features/optOuts/useSaveOptOuts', () => ({
   useSaveOptOuts: vi.fn(() => ({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })),
 }))
 
-// ── Imports after mocks ───────────────────────────────────────────────────────
+// ── Imports after mocks ───────────────────────────────────────────────────
 import HomePage from './HomePage'
 import { useAuth } from '../features/auth/useAuth'
 import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
@@ -52,7 +52,7 @@ import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
 const mockUseAuth = useAuth as ReturnType<typeof vi.fn>
 const mockUseSaveOptOuts = useSaveOptOuts as ReturnType<typeof vi.fn>
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -61,7 +61,7 @@ function renderPage() {
   )
 }
 
-// ── Tests ─────────────────────────────────────────────────────────────────────
+// ── Tests ─────────────────────────────────────────────────────────────────
 describe('HomePage — unauthenticated', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ currentUser: null, loading: false })
@@ -109,8 +109,9 @@ describe('HomePage — authenticated', () => {
   })
 
   it('shows success feedback after a successful save', async () => {
+    const user = userEvent.setup()
     renderPage()
-    await userEvent.click(screen.getByRole('button', { name: /spara/i }))
+    await user.click(screen.getByRole('button', { name: /spara/i }))
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent(/sparats/i)
     )
