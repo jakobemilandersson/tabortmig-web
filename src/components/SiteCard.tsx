@@ -1,12 +1,15 @@
 import type { SiteConfig } from '../data/sites'
 
 /**
- * A lightweight date-string representation used in SiteCard's onChange
- * callback. The page/feature layer is responsible for converting to/from
- * Firebase Timestamps. This keeps SiteCard free of any Firebase imports.
+ * A plain-TS entry shape used in SiteCard props.
+ *
+ * `optOutDate` is an ISO-8601 date string ("YYYY-MM-DD"). The page/feature
+ * layer is responsible for converting this to/from a Firebase `Timestamp`
+ * before reading from or persisting to Firestore. This keeps SiteCard free
+ * of any Firebase imports.
  */
 export interface SiteCardEntry {
-  optOutDate: string // ISO date string, e.g. "2025-03-01"
+  optOutDate: string
 }
 
 export interface SiteCardProps {
@@ -15,22 +18,25 @@ export interface SiteCardProps {
   entry: SiteCardEntry | null
   /** Pass true for unauthenticated visitors to disable interactive controls. */
   disabled?: boolean
-  /** Called whenever the user toggles the checkbox or changes the date. */
+  /** Called when the user edits the opt-out date. */
   onChange: (partial: Partial<SiteCardEntry>) => void
+  /**
+   * Called when the user unchecks the "I have opted out" checkbox.
+   * The parent should treat this as a request to delete the entry.
+   */
+  onClear: () => void
 }
 
-export function SiteCard({ site, entry, disabled = false, onChange }: SiteCardProps) {
+export function SiteCard({ site, entry, disabled = false, onChange, onClear }: SiteCardProps) {
   const isChecked = entry !== null
   const dateValue = entry?.optOutDate ?? ''
 
   function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.checked) {
-      // Provide today's date as a sensible default when first checked
       const today = new Date().toISOString().slice(0, 10)
       onChange({ optOutDate: today })
     } else {
-      // Unchecking clears the entry; signal with an empty partial
-      onChange({})
+      onClear()
     }
   }
 
@@ -42,26 +48,27 @@ export function SiteCard({ site, entry, disabled = false, onChange }: SiteCardPr
   const dateId = `opt-out-date-${site.id}`
 
   return (
-    <article aria-label={site.name} style={{ borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>
+    <article aria-label={site.name} className="border-b border-gray-200 py-4">
+      <div className="flex items-baseline gap-2">
+        <h2 className="text-base font-semibold">
           <a
             href={site.optOutUrl}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Gå till avanmälningssidan för ${site.name}`}
+            className="underline hover:text-gray-600"
           >
             {site.name}
           </a>
         </h2>
       </div>
 
-      <p style={{ margin: '0.25rem 0 0.75rem', color: '#6b7280', fontSize: '0.875rem' }}>
+      <p className="mt-1 mb-3 text-sm text-gray-500">
         {site.description}
       </p>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2">
           <input
             id={checkboxId}
             type="checkbox"
@@ -73,8 +80,8 @@ export function SiteCard({ site, entry, disabled = false, onChange }: SiteCardPr
           <label htmlFor={checkboxId}>Jag har avanmält mig</label>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label htmlFor={dateId} style={{ fontSize: '0.875rem' }}>
+        <div className="flex items-center gap-2">
+          <label htmlFor={dateId} className="text-sm">
             Datum för avanmälan:
           </label>
           <input
@@ -89,22 +96,12 @@ export function SiteCard({ site, entry, disabled = false, onChange }: SiteCardPr
       </div>
 
       {disabled && (
-        <p
-          id={`disabled-hint-${site.id}`}
-          style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#9ca3af' }}
-        >
+        <p id={`disabled-hint-${site.id}`} className="mt-2 text-xs text-gray-400">
           Logga in för att spåra din avanmälan.
         </p>
       )}
 
-      <p
-        style={{
-          marginTop: '0.5rem',
-          fontSize: '0.75rem',
-          color: '#9ca3af',
-          fontStyle: 'italic',
-        }}
-      >
+      <p className="mt-2 text-xs text-gray-400 italic">
         Vi påminner dig baserat på vår uppskattade intervall ({site.defaultDurationMonths} månader).
         Sajten kan ha ett annat faktiskt beteende.
       </p>
