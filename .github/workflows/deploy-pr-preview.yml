@@ -32,6 +32,9 @@ jobs:
       - name: Add SPA 404 fallback
         run: cp dist/index.html dist/404.html
 
+      - name: Remove CNAME from preview build
+        run: rm -f dist/CNAME
+
       - name: Deploy preview to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
