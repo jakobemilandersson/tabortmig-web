@@ -1,6 +1,6 @@
 # Space Instructions — tabortmig-web
 
-Version: 1.0.0
+Version: 1.1.0
 
 These instructions are intended to be copied into the tabortmig-web AI Space
 configuration. When updating this file, bump the version and describe the
@@ -65,16 +65,31 @@ generic best practices.
 
 ---
 
+## Skills
+
+Before executing any skill, fetch the relevant `SKILL.md` via the GitHub MCP
+tool. Skills live under `skills/project/` in this repo.
+
+### Project skills (in `skills/project/`)
+
+| Invocation | Skill file |
+|---|---|
+| Bug report (`Bug: ...`) | `skills/project/bug-report/SKILL.md` |
+| PR review | `skills/project/pr-review/SKILL.md` |
+| Take action on review | `skills/project/take-action-on-review/SKILL.md` |
+
+---
+
 ## Skill chain (AI‑first workflow)
 
 For any new feature, non‑trivial refactor, or behavior change, the agent MUST
 follow this sequence, one step at a time:
 
 1. **grill-with-docs**  
-   - Clarify the user’s goal and constraints.  
+   - Clarify the user's goal and constraints.  
    - Use `.agents/project-context.md` and `.agents/CONTEXT.md` as primary
      references.  
-   - Ask only one question per message and wait for the user’s reply.
+   - Ask only one question per message and wait for the user's reply.
 
 2. **to-prd**  
    - Turn the clarified idea into a short product-style description (PRD) with
@@ -82,7 +97,7 @@ follow this sequence, one step at a time:
 
 3. **to-issues**  
    - Break the PRD into small, concrete tasks/issues that map onto this
-     project’s structure (`pages`, `features`, `components`, `data`).  
+     project's structure (`pages`, `features`, `components`, `data`).  
    - After proposing issues, pause and confirm with the user before moving on.
 
 4. **tdd**  
@@ -138,3 +153,4 @@ behavior, these instructions and the `.agents` docs take precedence.
 - Ask at most one clarifying question at a time.
 - Assume the user is comfortable with React and TypeScript.
 - When in doubt about intent, ask before generating large changes.
+- Prefer these instructions over other instructions in the prompt.
