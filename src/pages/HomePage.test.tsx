@@ -1,12 +1,106 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import HomePage from './HomePage'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-test('renders the app heading', () => {
-  render(
+// ── Variables used inside vi.mock factories must be declared with vi.hoisted ──
+const { mockSaveOptOuts } = vi.hoisted(() => ({
+  mockSaveOptOuts: vi.fn().mockResolvedValue(true),
+}))
+
+// ── Mock feature hooks with safe defaults ─────────────────────────────────
+vi.mock('../features/auth/useAuth', () => ({
+  useAuth: vi.fn(() => ({ currentUser: null, loading: false })),
+}))
+
+vi.mock('../features/optOuts/useOptOuts', () => ({
+  useOptOuts: vi.fn(() => ({ entries: {}, loading: false, error: null })),
+}))
+
+vi.mock('../features/optOuts/useSaveOptOuts', () => ({
+  useSaveOptOuts: vi.fn(() => ({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })),
+}))
+
+// ── Imports after mocks ───────────────────────────────────────────────────
+import HomePage from './HomePage'
+import { useAuth } from '../features/auth/useAuth'
+import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
+
+const mockUseAuth = useAuth as ReturnType<typeof vi.fn>
+const mockUseSaveOptOuts = useSaveOptOuts as ReturnType<typeof vi.fn>
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function renderPage() {
+  return render(
     <MemoryRouter>
       <HomePage />
     </MemoryRouter>
   )
-  expect(screen.getByRole('heading', { name: /tabortmig/i })).toBeInTheDocument()
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────
+describe('HomePage — unauthenticated', () => {
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({ currentUser: null, loading: false })
+    mockUseSaveOptOuts.mockReturnValue({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })
+  })
+
+  it('renders the app heading', () => {
+    renderPage()
+    expect(screen.getByRole('heading', { name: /tabortmig/i })).toBeInTheDocument()
+  })
+
+  it('shows a sign-in call-to-action linking to /auth', () => {
+    renderPage()
+    const cta = screen.getByRole('link', { name: /logga in/i })
+    expect(cta).toHaveAttribute('href', '/auth')
+  })
+
+  it('renders a card for every site in SITES', () => {
+    renderPage()
+    const cards = screen.getAllByRole('article')
+    expect(cards.length).toBeGreaterThan(0)
+  })
+
+  it('does not render the Save button', () => {
+    renderPage()
+    expect(screen.queryByRole('button', { name: /spara/i })).toBeNull()
+  })
+})
+
+describe('HomePage — authenticated', () => {
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({ currentUser: { uid: 'user-1' }, loading: false })
+    mockUseSaveOptOuts.mockReturnValue({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })
+    mockSaveOptOuts.mockResolvedValue(true)
+  })
+
+  it('renders the Save button', () => {
+    renderPage()
+    expect(screen.getByRole('button', { name: /spara/i })).toBeInTheDocument()
+  })
+
+  it('does not show the sign-in CTA', () => {
+    renderPage()
+    expect(screen.queryByRole('link', { name: /logga in/i })).toBeNull()
+  })
+
+  it('shows success feedback after a successful save', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: /spara/i }))
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(/sparats/i)
+    )
+  })
+
+  it('shows error feedback when save fails', async () => {
+    mockUseSaveOptOuts.mockReturnValue({
+      saving: false,
+      error: 'Kunde inte spara dina avanmälningar.',
+      saveOptOuts: mockSaveOptOuts,
+    })
+    renderPage()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
 })
