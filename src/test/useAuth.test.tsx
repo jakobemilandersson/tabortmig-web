@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 
 // Mock firebase/app so no real Firebase initialisation happens
 vi.mock('firebase/app', () => ({
@@ -36,9 +36,10 @@ describe('useAuth', () => {
 
   it('sets loading to false after auth state resolves', async () => {
     const { result } = renderHook(() => useAuth());
-    // Simulate Firebase resolving with no user
-    authStateCallback?.(null);
-    // loading should transition to false
+    // Wrap the state-updating callback in act() so React flushes the update
+    await act(async () => {
+      authStateCallback?.(null);
+    });
     expect(result.current.loading).toBe(false);
     expect(result.current.currentUser).toBeNull();
   });
