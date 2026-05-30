@@ -45,7 +45,7 @@ jobs:
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
-            const previewUrl = `https://tabortmig.jakob.nu/pull/${prNumber}/`;
+            const previewUrl = `https://tabortmig.jakob.now/pull/${prNumber}/`;
             const body = `### 🔍 PR Preview\n\nA preview of this PR is available at:\n${previewUrl}\n\n> Built from commit ${{ github.sha }}`;
 
             const { data: comments } = await github.rest.issues.listComments({
