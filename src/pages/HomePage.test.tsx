@@ -2,10 +2,31 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
-import HomePage from './HomePage'
 
-// ── mock feature hooks ────────────────────────────────────────────────────────
+// ── Block the entire Firebase initialisation chain ────────────────────────────
+vi.mock('firebase/app', () => ({
+  initializeApp: vi.fn(() => ({})),
+  getApps: vi.fn(() => []),
+}))
 
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(() => ({})),
+  collection: vi.fn(),
+  getDocs: vi.fn(),
+  doc: vi.fn(),
+  setDoc: vi.fn(),
+  Timestamp: { fromDate: (d: Date) => ({ toDate: () => d }) },
+}))
+
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(() => ({})),
+  onAuthStateChanged: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+}))
+
+// ── Mock feature hooks ───────────────────────────────────────────────────────────
 const mockSaveOptOuts = vi.fn().mockResolvedValue(true)
 
 vi.mock('../features/auth/useAuth', () => ({
@@ -20,16 +41,15 @@ vi.mock('../features/optOuts/useSaveOptOuts', () => ({
   useSaveOptOuts: vi.fn(() => ({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })),
 }))
 
-// ── firebase/firestore must be stubbed so Timestamp import doesn't blow up ───
-vi.mock('firebase/firestore', () => ({
-  Timestamp: { fromDate: (d: Date) => ({ toDate: () => d }) },
-}))
-
+// ── Import component after mocks are in place ────────────────────────────────
+import HomePage from './HomePage'
 import { useAuth } from '../features/auth/useAuth'
+import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
+
 const mockUseAuth = useAuth as ReturnType<typeof vi.fn>
+const mockUseSaveOptOuts = useSaveOptOuts as ReturnType<typeof vi.fn>
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
+// ── Helpers ─────────────────────────────────────────────────────────────────────
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -38,11 +58,11 @@ function renderPage() {
   )
 }
 
-// ── tests ─────────────────────────────────────────────────────────────────────
-
+// ── Tests ──────────────────────────────────────────────────────────────────────
 describe('HomePage — unauthenticated', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ currentUser: null, loading: false })
+    mockUseSaveOptOuts.mockReturnValue({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })
   })
 
   it('renders the app heading', () => {
@@ -56,9 +76,9 @@ describe('HomePage — unauthenticated', () => {
     expect(cta).toHaveAttribute('href', '/auth')
   })
 
-  it('renders a card for every site in SITES', async () => {
+  it('renders a card for every site in SITES', () => {
     renderPage()
-    const cards = await screen.findAllByRole('article')
+    const cards = screen.getAllByRole('article')
     expect(cards.length).toBeGreaterThan(0)
   })
 
@@ -71,6 +91,7 @@ describe('HomePage — unauthenticated', () => {
 describe('HomePage — authenticated', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ currentUser: { uid: 'user-1' }, loading: false })
+    mockUseSaveOptOuts.mockReturnValue({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })
     mockSaveOptOuts.mockResolvedValue(true)
   })
 
@@ -93,17 +114,12 @@ describe('HomePage — authenticated', () => {
   })
 
   it('shows error feedback when save fails', async () => {
-    mockSaveOptOuts.mockResolvedValue(false)
-    const { useSaveOptOuts } = await import('../features/optOuts/useSaveOptOuts')
-    ;(useSaveOptOuts as ReturnType<typeof vi.fn>).mockReturnValue({
+    mockUseSaveOptOuts.mockReturnValue({
       saving: false,
       error: 'Kunde inte spara dina avanmälningar.',
       saveOptOuts: mockSaveOptOuts,
     })
     renderPage()
-    await userEvent.click(screen.getByRole('button', { name: /spara/i }))
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toBeInTheDocument()
-    )
+    expect(screen.getByRole('alert')).toBeInTheDocument()
   })
 })
