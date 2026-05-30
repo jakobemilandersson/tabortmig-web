@@ -25,7 +25,8 @@ jobs:
         run: npm run lint
 
       - name: Test
-        run: npm test -- --run
+        run: npm test -- --run --reporter=verbose
+        timeout-minutes: 3
 
       - name: Build
         run: npm run build
