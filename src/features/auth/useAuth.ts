@@ -19,7 +19,7 @@ export interface UseAuthReturn {
   loading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: AuthErrorMessage | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthErrorMessage | null }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ error: AuthErrorMessage | null }>;
 }
 
 function mapAuthError(err: AuthError): AuthErrorMessage {
@@ -30,8 +30,6 @@ function mapAuthError(err: AuthError): AuthErrorMessage {
       return 'Ogiltig e-postadress.';
     case 'auth/weak-password':
       return 'Lösenordet är för svagt. Minst 6 tecken.';
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
     case 'auth/invalid-credential':
       return 'Felaktig e-postadress eller lösenord.';
     case 'auth/too-many-requests':
@@ -72,7 +70,12 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function signOut() {
-    await firebaseSignOut(auth);
+    try {
+      await firebaseSignOut(auth);
+      return { error: null };
+    } catch (err) {
+      return { error: mapAuthError(err as AuthError) };
+    }
   }
 
   return { currentUser, loading, signUp, signIn, signOut };
