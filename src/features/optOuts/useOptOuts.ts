@@ -23,6 +23,8 @@ export function useOptOuts(uid: string | null): UseOptOutsReturn {
     setLoading(true);
     setError(null);
 
+    // TODO: consider switching to onSnapshot for live updates when the account
+    // page is built, so opt-out state stays in sync without a manual refresh.
     getDocs(collection(db, 'users', uid, 'optOutEntries'))
       .then((snapshot) => {
         const result: Record<string, OptOutEntry> = {};
@@ -31,7 +33,7 @@ export function useOptOuts(uid: string | null): UseOptOutsReturn {
         });
         setEntries(result);
       })
-      .catch(() => setError('Kunde inte hämta dina avanmälningar.'))
+      .catch(() => setError('Kunde inte h\u00e4mta dina avanm\u00e4lningar.'))
       .finally(() => setLoading(false));
   }, [uid]);
 
