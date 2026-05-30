@@ -3,7 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-// ── Block the entire Firebase initialisation chain ────────────────────────────
+// ── Variables used inside vi.mock factories must be declared with vi.hoisted ──
+const { mockSaveOptOuts } = vi.hoisted(() => ({
+  mockSaveOptOuts: vi.fn().mockResolvedValue(true),
+}))
+
+// ── Block the entire Firebase initialisation chain ───────────────────────────
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({})),
   getApps: vi.fn(() => []),
@@ -26,9 +31,7 @@ vi.mock('firebase/auth', () => ({
   signOut: vi.fn(),
 }))
 
-// ── Mock feature hooks ───────────────────────────────────────────────────────────
-const mockSaveOptOuts = vi.fn().mockResolvedValue(true)
-
+// ── Mock feature hooks ────────────────────────────────────────────────────────
 vi.mock('../features/auth/useAuth', () => ({
   useAuth: vi.fn(),
 }))
@@ -41,7 +44,7 @@ vi.mock('../features/optOuts/useSaveOptOuts', () => ({
   useSaveOptOuts: vi.fn(() => ({ saving: false, error: null, saveOptOuts: mockSaveOptOuts })),
 }))
 
-// ── Import component after mocks are in place ────────────────────────────────
+// ── Imports after mocks ───────────────────────────────────────────────────────
 import HomePage from './HomePage'
 import { useAuth } from '../features/auth/useAuth'
 import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
@@ -49,7 +52,7 @@ import { useSaveOptOuts } from '../features/optOuts/useSaveOptOuts'
 const mockUseAuth = useAuth as ReturnType<typeof vi.fn>
 const mockUseSaveOptOuts = useSaveOptOuts as ReturnType<typeof vi.fn>
 
-// ── Helpers ─────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -58,7 +61,7 @@ function renderPage() {
   )
 }
 
-// ── Tests ──────────────────────────────────────────────────────────────────────
+// ── Tests ─────────────────────────────────────────────────────────────────────
 describe('HomePage — unauthenticated', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ currentUser: null, loading: false })
