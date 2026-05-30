@@ -7,6 +7,11 @@ vi.mock('firebase/app', () => ({
   getApps: vi.fn(() => []),
 }));
 
+// Mock firebase/firestore so getFirestore() in firebaseConfig doesn't crash
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(() => ({})),
+}));
+
 // Capture the onAuthStateChanged callback so we can control it
 let authStateCallback: ((user: null) => void) | null = null;
 
