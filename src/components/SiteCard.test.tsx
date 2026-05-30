@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { SiteCard } from './SiteCard'
@@ -33,14 +33,12 @@ describe('SiteCard', () => {
   })
 
   describe('date input', () => {
-    it('calls onChange with updated optOutDate when date changes', async () => {
+    it('calls onChange with updated optOutDate when date changes', () => {
       const onChange = vi.fn()
       render(<SiteCard site={site} entry={{ optOutDate: '2025-01-01' }} onChange={onChange} />)
       const dateInput = screen.getByLabelText(/datum för avanmälan från ratsit/i)
-      await userEvent.clear(dateInput)
-      await userEvent.type(dateInput, '2025-06-15')
-      const lastCall = onChange.mock.calls.at(-1)?.[0] as Record<string, unknown>
-      expect(lastCall.optOutDate).toBe('2025-06-15')
+      fireEvent.change(dateInput, { target: { value: '2025-06-15' } })
+      expect(onChange).toHaveBeenLastCalledWith({ optOutDate: '2025-06-15' })
     })
 
     it('is disabled when no entry exists (checkbox unchecked)', () => {
