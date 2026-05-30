@@ -1,3 +1,7 @@
+// Note: date strings like '2024-01-15' are parsed as UTC midnight by the Date
+// constructor, but computeExpiryDate operates in local time via setMonth/setDate.
+// All assertions use matching UTC-midnight Dates so results are consistent
+// across timezones for these whole-day values.
 import { describe, expect, it } from 'vitest';
 import { computeExpiryDate } from './computeExpiryDate';
 

@@ -2,6 +2,10 @@
  * Adds `months` calendar months to `optOutDate`.
  * Clamps to the last day of the target month if the original day overflows
  * (e.g. Jan 31 + 1 month → Feb 28/29, not Mar 2/3).
+ *
+ * @param optOutDate - The date the user opted out. Treated as a local-time date.
+ * @param months - Number of whole calendar months to add. Must be a positive integer.
+ * @returns A new Date representing the expiry date.
  */
 export function computeExpiryDate(optOutDate: Date, months: number): Date {
   const result = new Date(optOutDate);
