@@ -82,3 +82,33 @@ and clean.
 - React Router v7, `BrowserRouter` + `<Routes>`.
 - `ProtectedRoute` wrapper redirects unauthenticated users to `/auth`.
 - Agents must not add, remove, or rename routes without explicit user request.
+
+## Environment variables
+
+The Firebase web SDK requires the following environment variables. These are
+**not secrets** — they are public identifiers. Security is enforced by
+Firestore rules and Firebase Auth.
+
+| Variable | Description |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Firebase API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain (e.g. `project-id.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Cloud Messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase App ID |
+
+**Local development:** copy these into `.env.local` (gitignored).
+
+**CI/CD:** all six variables must be set as GitHub Actions secrets and injected
+at build time:
+
+```yaml
+env:
+  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+  VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+  VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+  VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+  VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+  VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+```
